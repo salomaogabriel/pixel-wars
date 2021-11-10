@@ -3,6 +3,7 @@ const createPixelElement = (i, j, size, competitor1, competitor2) => {
   let competitor = i < firstCompetitorSide ? competitor1 : competitor2;
 
   return {
+    team: competitor.team,
     color: competitor.color,
     force: competitor.force,
     i: i,
@@ -11,14 +12,65 @@ const createPixelElement = (i, j, size, competitor1, competitor2) => {
 };
 
 class Pixel {
-  constructor(size, team) {
+  constructor(size, team, parent1 = [], parent2 = []) {
+    this.team = team;
     this.color = this.createColor();
-    this.force = Math.floor(Math.random() * 9) + 1;
-    this.defenseAdvantage = Math.floor(Math.random() * 3) + 1;
-    this.attackAdvantage = Math.floor(Math.random() * 3) + 1;
-    this.gangAdvantage = Math.floor(Math.random() * 3) + 1;
-    this.soloAdvantage = Math.floor(Math.random() * 3) + 1;
-    this.surprise = Math.floor(Math.random() * 6) + 1;
+    if (parent1.length < 1 || parent2.length < 1) {
+      console.log("Parent:");
+
+      this.force = Math.floor(Math.random() * 9) + 1;
+      this.defenseAdvantage = Math.floor(Math.random() * 3) + 1;
+      this.attackAdvantage = Math.floor(Math.random() * 3) + 1;
+      this.gangAdvantage = Math.floor(Math.random() * 3) + 1;
+      this.soloAdvantage = Math.floor(Math.random() * 3) + 1;
+      this.surprise = Math.floor(Math.random() * 6) + 1;
+      this.genes = new Genes();
+      this.genes = this.genes.getGenes();
+    } else {
+      console.log("Child:");
+      this.genes = new Genes(4, parent1.genes, parent2.genes);
+      this.genes = this.genes.getGenes();
+
+      console.log(this.genes);
+
+      let parentsForce = Math.floor((parent1.force + parent2.force) / 2);
+      let parentsAttackAdvantage = Math.floor(
+        (parent1.attackAdvantage + parent2.attackAdvantage) / 2
+      );
+      let parentsDefenseAdvantage = Math.floor(
+        (parent1.defenseAdvantage + parent2.defenseAdvantage) / 2
+      );
+      let parentsGangAdvantage = Math.floor(
+        (parent1.gangAdvantage + parent2.gangAdvantage) / 2
+      );
+      let parentsSoloAdvantage = Math.floor(
+        (parent1.soloAdvantage + parent2.soloAdvantage) / 2
+      );
+      let parentsSurprise = Math.floor(
+        (parent1.surprise + parent2.surprise) / 2
+      );
+      this.force = this.genes[0] == 0 ? parentsForce - 1 : parentsForce + 1;
+      this.attackAdvantage =
+        this.genes[1] == 0
+          ? parentsAttackAdvantage - 1
+          : parentsAttackAdvantage + 1;
+      this.defenseAdvantage =
+        this.genes[2] == 0
+          ? parentsDefenseAdvantage - 1
+          : parentsDefenseAdvantage + 1;
+      this.gangAdvantage =
+        this.genes[3] == 0
+          ? parentsGangAdvantage - 1
+          : parentsGangAdvantage + 1;
+      this.soloAdvantage =
+        this.genes[4] == 0
+          ? parentsSoloAdvantage - 1
+          : parentsSoloAdvantage + 1;
+      this.surprise =
+        this.genes[5] == 0 ? parentsSurprise - 1 : parentsSurprise + 1;
+    }
+    this.totalPixels = Math.floor((size * size) / 2);
+    this.numberOfExtraLifes = 50;
     // this.isKingAlive = true;
     // let row = Math.ceil(size / 2);
     // let column = team == 1 ? 0 : size - 1;
@@ -38,21 +90,41 @@ class Simulate {
   constructor(size = 125) {
     this.current = 1;
     this.interval = setInterval(this.run, 2);
-    this.competitor1 = new Pixel(size, 1);
-    this.competitor2 = new Pixel(size, 2);
+    this.competitor1 = new Pixel(
+      size,
+      1,
+      new Pixel(size, 1),
+      new Pixel(size, 2)
+    );
+    this.competitor2 = new Pixel(
+      size,
+      2,
+      new Pixel(size, 1),
+      new Pixel(size, 2)
+    );
 
     this.size = size;
-    this.step = 250 / size;
+    this.step = 500 / size;
     //Normally the step would be 500 / size but I decreased to look better with a smaller size
     this.arena = this.createArena(size, this.competitor1, this.competitor2);
     this.oldArena = this.arena;
-    setInterval(() => {
+    this.interval = setInterval(() => {
       this.run();
-      document.getElementById("competitor1").innerHTML = this.competitor1.force;
+      document.getElementById(
+        "competitor1"
+      ).innerHTML = `Color: ${this.competitor1.color} || Force: ${this.competitor1.force}
+      Defense Advantage: ${this.competitor1.defenseAdvantage} || Attack Advantage: ${this.competitor1.attackAdvantage}
+      Gang Advantage: ${this.competitor1.gangAdvantage} || Solo Advantage : ${this.competitor1.soloAdvantage} || PIXELS: ${this.competitor1.totalPixels}
+      || Lifes: ${this.competitor1.numberOfExtraLifes}`;
       document.getElementById("competitor1").style.color =
         this.competitor1.color;
 
-      document.getElementById("competitor2").innerHTML = this.competitor2.force;
+      document.getElementById(
+        "competitor2"
+      ).innerHTML = `Color: ${this.competitor2.color} || Force: ${this.competitor2.force}
+      Defense Advantage: ${this.competitor2.defenseAdvantage} || Attack Advantage: ${this.competitor2.attackAdvantage}
+      Gang Advantage: ${this.competitor2.gangAdvantage} || Solo Advantage : ${this.competitor2.soloAdvantage} || PIXELS: ${this.competitor2.totalPixels}
+      || Lifes: ${this.competitor2.numberOfExtraLifes}`;
       document.getElementById("competitor2").style.color =
         this.competitor2.color;
     }, 2);
@@ -65,6 +137,9 @@ class Simulate {
       this.competitor2
     );
     draw(this.arena, this.competitor1, this.competitor2, this.step, this.size);
+  }
+  clearInterval() {
+    clearInterval(this.interval);
   }
 
   createArena(size, competitor1, competitor2) {
@@ -94,6 +169,8 @@ function calculate(arena, size, competitor1, competitor2) {
       newArena[i][j].force = newPixel.force;
     }
   }
+  if (competitor1.totalPixels < 2000) competitor1.numberOfExtraLifes--;
+  if (competitor2.totalPixels < 2000) competitor2.numberOfExtraLifes--;
   return newArena;
 }
 
@@ -107,6 +184,12 @@ function getNewValue(neighbours, curPixel, competitor1, competitor2) {
     defenseTeam = competitor2;
     attackTeam = competitor1;
   }
+  let lowNumbersBonusDefense =
+    defenseTeam.totalPixels < 2000 && defenseTeam.numberOfExtraLifes > 0
+      ? 50
+      : 0;
+  let lowNumbersBonusAttack =
+    attackTeam.totalPixels < 2000 && attackTeam.numberOfExtraLifes > 0 ? 50 : 0;
   let defenseForce = 0;
   let attackForce = 0;
   let defenders = 1;
@@ -137,13 +220,27 @@ function getNewValue(neighbours, curPixel, competitor1, competitor2) {
       ? defenseTeam.gangAdvantage
       : defenseTeam.soloAdvantage;
   let defenseScore =
-    defenseForce + defenseGangBonus + defenseTeam.surprise + defenseBonus;
+    defenseForce +
+    defenseGangBonus +
+    defenseTeam.surprise +
+    defenseBonus +
+    lowNumbersBonusDefense +
+    defenders -
+    attackers;
   let attackScore =
-    attackForce + attackGangBonus + attackTeam.surprise + attackBonus;
+    attackForce +
+    attackGangBonus +
+    attackTeam.surprise +
+    attackBonus +
+    lowNumbersBonusAttack +
+    attackers -
+    defenders;
   let random = Math.floor(Math.random() * 10);
 
   if (defenseScore >= attackScore) {
     if (random < 2) {
+      attackTeam.totalPixels++;
+      defenseTeam.totalPixels--;
       return { color: attackTeam.color, force: attackTeam.force };
     }
     return { color: defenseTeam.color, force: defenseTeam.force };
@@ -151,6 +248,8 @@ function getNewValue(neighbours, curPixel, competitor1, competitor2) {
     if (random < 2) {
       return { color: defenseTeam.color, force: defenseTeam.force };
     } else {
+      attackTeam.totalPixels++;
+      defenseTeam.totalPixels--;
       return { color: attackTeam.color, force: attackTeam.force };
     }
   }
@@ -188,4 +287,4 @@ function draw(arena, competitor1, competitor2, step, size) {
   }
 }
 
-let simulation = new Simulate(75);
+let simulation = new Simulate(125);

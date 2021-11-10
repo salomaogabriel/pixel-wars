@@ -1,20 +1,21 @@
 <!--PIXELS FIGHTING by Jan Tewes Thede | @jtthede -->
 <html>
   <title>PIXELS FIGHTING</title>
-
-  <head>
-    <style>
-      footer {
-        position: absolute;
-        bottom: 10;
-      }
-    </style>
-  </head>
+  <script src="/src//genes.js"></script>
   <script src="/src//pixels.js"></script>
   <body>
     <div id="sum"></div>
-    <canvas id="scrawl" width="250" height="250"></canvas>
+    <canvas id="scrawl" width="500" height="500"></canvas>
     <div id="competitor1"></div>
     <div id="competitor2"></div>
+    <button
+      onclick="
+      simulation.clearInterval();
+      simulation = new Simulate(125);
+
+      "
+    >
+      Start another simulation
+    </button>
   </body>
 </html>

@@ -1,3 +1,6 @@
 When the force values were equal, one always win
 But when there was a difference of 1, it would be a stalemate
 ///Nevermind code bug //
+Ideas:
+A timed bonus for the one who is losing
+Eg: when team a is losing with only 1/8 of its territory, it'll have a boost of 5 for 10 seconds after that nothing
