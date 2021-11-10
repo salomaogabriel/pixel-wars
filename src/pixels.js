@@ -5,15 +5,28 @@ const createPixelElement = (i, j, size, competitor1, competitor2) => {
   return {
     color: competitor.color,
     force: competitor.force,
+    i: i,
+    j: j,
   };
 };
 
 class Pixel {
-  constructor() {
+  constructor(size, team) {
     this.color = this.createColor();
     this.force = Math.floor(Math.random() * 9) + 1;
-
-    console.log(`Color: ${this.color} || Force: ${this.force}`);
+    this.defenseAdvantage = Math.floor(Math.random() * 3) + 1;
+    this.attackAdvantage = Math.floor(Math.random() * 3) + 1;
+    this.gangAdvantage = Math.floor(Math.random() * 3) + 1;
+    this.soloAdvantage = Math.floor(Math.random() * 3) + 1;
+    this.surprise = Math.floor(Math.random() * 6) + 1;
+    // this.isKingAlive = true;
+    // let row = Math.ceil(size / 2);
+    // let column = team == 1 ? 0 : size - 1;
+    // this.kingPosition = [row, column];
+    console.log(`    Team ${team}
+    Color: ${this.color} || Force: ${this.force}
+    Defense Advantage: ${this.defenseAdvantage} || Attack Advantage: ${this.attackAdvantage}
+    Gang Advantage: ${this.gangAdvantage} || Solo Advantage : ${this.soloAdvantage}`);
   }
   createColor() {
     let color = Math.floor(Math.random() * 16777215).toString(16);
@@ -25,8 +38,8 @@ class Simulate {
   constructor(size = 125) {
     this.current = 1;
     this.interval = setInterval(this.run, 2);
-    this.competitor1 = new Pixel();
-    this.competitor2 = new Pixel();
+    this.competitor1 = new Pixel(size, 1);
+    this.competitor2 = new Pixel(size, 2);
 
     this.size = size;
     this.step = 250 / size;
@@ -36,8 +49,12 @@ class Simulate {
     setInterval(() => {
       this.run();
       document.getElementById("competitor1").innerHTML = this.competitor1.force;
+      document.getElementById("competitor1").style.color =
+        this.competitor1.color;
 
       document.getElementById("competitor2").innerHTML = this.competitor2.force;
+      document.getElementById("competitor2").style.color =
+        this.competitor2.color;
     }, 2);
   }
   run() {
@@ -81,36 +98,61 @@ function calculate(arena, size, competitor1, competitor2) {
 }
 
 function getNewValue(neighbours, curPixel, competitor1, competitor2) {
-  let competitor1Force = 0;
-  let competitor2Force = 0;
-  competitor1Force += curPixel.force;
-  let otherTeam = { color: undefined, force: undefined };
+  let defenseTeam,
+    attackTeam = undefined;
   if (competitor1.color == curPixel.color) {
-    otherTeam.force = competitor2.force;
-    otherTeam.color = competitor2.color;
+    defenseTeam = competitor1;
+    attackTeam = competitor2;
   } else {
-    otherTeam.force = competitor1.force;
-    otherTeam.color = competitor1.color;
+    defenseTeam = competitor2;
+    attackTeam = competitor1;
   }
+  let defenseForce = 0;
+  let attackForce = 0;
+  let defenders = 1;
+  let attackers = 0;
+  let defenseGangBonus = 0;
+  let attackGangBonus = 0;
+  let defenseBonus = defenseTeam.defenseAdvantage;
+  let attackBonus = attackTeam.attackAdvantage;
+  defenseForce += curPixel.force;
+
   for (let i = 0; i < neighbours.length; i++) {
     if (neighbours[i] == undefined) continue;
     if (neighbours[i].color == curPixel.color) {
-      competitor1Force += neighbours[i].force;
+      defenseForce += neighbours[i].force;
+      defenders++;
     } else {
-      competitor2Force += neighbours[i].force;
+      attackForce += neighbours[i].force;
+      attackers++;
     }
   }
+  if (attackForce < 1) {
+    return { color: defenseTeam.color, force: defenseTeam.force };
+  }
+  attackGangBonus =
+    defenders > attackers ? attackTeam.soloAdvantage : attackTeam.gangAdvantage;
+  defenseGangBonus =
+    defenders > attackers
+      ? defenseTeam.gangAdvantage
+      : defenseTeam.soloAdvantage;
+  let defenseScore =
+    defenseForce + defenseGangBonus + defenseTeam.surprise + defenseBonus;
+  let attackScore =
+    attackForce + attackGangBonus + attackTeam.surprise + attackBonus;
   let random = Math.floor(Math.random() * 10);
-  if (competitor1Force >= competitor2Force) {
-    if (random < 2 && competitor2Force > 0) {
-      return { color: otherTeam.color, force: otherTeam.force };
+
+  if (defenseScore >= attackScore) {
+    if (random < 2) {
+      return { color: attackTeam.color, force: attackTeam.force };
     }
-    return { color: curPixel.color, force: curPixel.force };
+    return { color: defenseTeam.color, force: defenseTeam.force };
   } else {
     if (random < 2) {
-      return { color: curPixel.color, force: curPixel.force };
+      return { color: defenseTeam.color, force: defenseTeam.force };
+    } else {
+      return { color: attackTeam.color, force: attackTeam.force };
     }
-    return { color: otherTeam.color, force: otherTeam.force };
   }
 }
 function getNeighbours(arena, i, j, size) {
