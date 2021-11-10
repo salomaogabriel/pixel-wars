@@ -31,8 +31,6 @@ class Pixel {
       this.genes = new Genes(4, parent1.genes, parent2.genes);
       this.genes = this.genes.getGenes();
 
-      console.log(this.genes);
-
       let parentsForce = Math.floor((parent1.force + parent2.force) / 2);
       let parentsAttackAdvantage = Math.floor(
         (parent1.attackAdvantage + parent2.attackAdvantage) / 2
@@ -87,8 +85,9 @@ class Pixel {
   }
 }
 class Simulate {
-  constructor(size = 125) {
+  constructor(size = 125, show = false) {
     this.current = 1;
+    this.show = show;
     this.interval = setInterval(this.run, 2);
     this.competitor1 = new Pixel(
       size,
@@ -108,8 +107,19 @@ class Simulate {
     //Normally the step would be 500 / size but I decreased to look better with a smaller size
     this.arena = this.createArena(size, this.competitor1, this.competitor2);
     this.oldArena = this.arena;
+    console.log(this.arena);
     this.interval = setInterval(() => {
       this.run();
+    }, 2);
+  }
+  run() {
+    this.arena = calculate(
+      this.arena,
+      this.size,
+      this.competitor1,
+      this.competitor2
+    );
+    if (this.show) {
       document.getElementById(
         "competitor1"
       ).innerHTML = `Color: ${this.competitor1.color} || Force: ${this.competitor1.force}
@@ -127,16 +137,14 @@ class Simulate {
       || Lifes: ${this.competitor2.numberOfExtraLifes}`;
       document.getElementById("competitor2").style.color =
         this.competitor2.color;
-    }, 2);
-  }
-  run() {
-    this.arena = calculate(
-      this.arena,
-      this.size,
-      this.competitor1,
-      this.competitor2
-    );
-    draw(this.arena, this.competitor1, this.competitor2, this.step, this.size);
+      draw(
+        this.arena,
+        this.competitor1,
+        this.competitor2,
+        this.step,
+        this.size
+      );
+    }
   }
   clearInterval() {
     clearInterval(this.interval);
@@ -167,6 +175,7 @@ function calculate(arena, size, competitor1, competitor2) {
       );
       newArena[i][j].color = newPixel.color;
       newArena[i][j].force = newPixel.force;
+      newArena[i][j].team = newPixel.team;
     }
   }
   if (competitor1.totalPixels < 2000) competitor1.numberOfExtraLifes--;
@@ -177,7 +186,7 @@ function calculate(arena, size, competitor1, competitor2) {
 function getNewValue(neighbours, curPixel, competitor1, competitor2) {
   let defenseTeam,
     attackTeam = undefined;
-  if (competitor1.color == curPixel.color) {
+  if (competitor1.team == curPixel.team) {
     defenseTeam = competitor1;
     attackTeam = competitor2;
   } else {
@@ -211,7 +220,11 @@ function getNewValue(neighbours, curPixel, competitor1, competitor2) {
     }
   }
   if (attackForce < 1) {
-    return { color: defenseTeam.color, force: defenseTeam.force };
+    return {
+      color: defenseTeam.color,
+      force: defenseTeam.force,
+      team: defenseTeam.team,
+    };
   }
   attackGangBonus =
     defenders > attackers ? attackTeam.soloAdvantage : attackTeam.gangAdvantage;
@@ -241,16 +254,32 @@ function getNewValue(neighbours, curPixel, competitor1, competitor2) {
     if (random < 2) {
       attackTeam.totalPixels++;
       defenseTeam.totalPixels--;
-      return { color: attackTeam.color, force: attackTeam.force };
+      return {
+        color: attackTeam.color,
+        force: attackTeam.force,
+        team: attackTeam.team,
+      };
     }
-    return { color: defenseTeam.color, force: defenseTeam.force };
+    return {
+      color: defenseTeam.color,
+      force: defenseTeam.force,
+      team: defenseTeam.team,
+    };
   } else {
     if (random < 2) {
-      return { color: defenseTeam.color, force: defenseTeam.force };
+      return {
+        color: defenseTeam.color,
+        force: defenseTeam.force,
+        team: defenseTeam.team,
+      };
     } else {
       attackTeam.totalPixels++;
       defenseTeam.totalPixels--;
-      return { color: attackTeam.color, force: attackTeam.force };
+      return {
+        color: attackTeam.color,
+        force: attackTeam.force,
+        team: attackTeam.team,
+      };
     }
   }
 }
@@ -287,4 +316,23 @@ function draw(arena, competitor1, competitor2, step, size) {
   }
 }
 
-let simulation = new Simulate(125);
+let simulation = new Simulate(125, true);
+function StartSimulation(rounds) {
+  let numberOfParticipants = Math.pow(2, rounds);
+  //create all pixels  needed for the tournment
+}
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
+// new Simulate(125);
