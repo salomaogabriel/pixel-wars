@@ -16,8 +16,6 @@ class Pixel {
     this.team = team;
     this.color = this.createColor();
     if (parent1.length < 1 || parent2.length < 1) {
-      console.log("Parent:");
-
       this.force = Math.floor(Math.random() * 9) + 1;
       this.defenseAdvantage = Math.floor(Math.random() * 3) + 1;
       this.attackAdvantage = Math.floor(Math.random() * 3) + 1;
@@ -27,7 +25,6 @@ class Pixel {
       this.genes = new Genes();
       this.genes = this.genes.getGenes();
     } else {
-      console.log("Child:");
       this.genes = new Genes(4, parent1.genes, parent2.genes);
       this.genes = this.genes.getGenes();
 
@@ -73,41 +70,56 @@ class Pixel {
     // let row = Math.ceil(size / 2);
     // let column = team == 1 ? 0 : size - 1;
     // this.kingPosition = [row, column];
-    console.log(`    Team ${team}
-    Color: ${this.color} || Force: ${this.force}
-    Defense Advantage: ${this.defenseAdvantage} || Attack Advantage: ${this.attackAdvantage}
-    Gang Advantage: ${this.gangAdvantage} || Solo Advantage : ${this.soloAdvantage}`);
+    // console.log(`    Team ${team}
+    // Color: ${this.color} || Force: ${this.force}
+    // Defense Advantage: ${this.defenseAdvantage} || Attack Advantage: ${this.attackAdvantage}
+    // Gang Advantage: ${this.gangAdvantage} || Solo Advantage : ${this.soloAdvantage}`);
   }
   createColor() {
     let color = Math.floor(Math.random() * 16777215).toString(16);
     color = "#" + ("000000" + color).slice(-6);
     return color;
   }
+  resetPixels() {
+    this.totalPixels = Math.floor((size * size) / 2);
+  }
+  addPixelValues(
+    force,
+    defenseAdvantage,
+    attackAdvantage,
+    gangAdvantage,
+    soloAdvantage,
+    surprise
+  ) {
+    this.force = force;
+    this.defenseAdvantage = defenseAdvantage;
+    this.attackAdvantage = attackAdvantage;
+    this.gangAdvantage = gangAdvantage;
+    this.soloAdvantage = soloAdvantage;
+    this.surprise = surprise;
+    this.genes = new Genes();
+    this.genes = this.genes.getGenes();
+  }
 }
 class Simulate {
-  constructor(size = 125, show = false) {
+  constructor(size = 125, show = false, competitor1, competitor2) {
     this.current = 1;
     this.show = show;
     this.interval = setInterval(this.run, 2);
-    this.competitor1 = new Pixel(
-      size,
-      1,
-      new Pixel(size, 1),
-      new Pixel(size, 2)
-    );
-    this.competitor2 = new Pixel(
-      size,
-      2,
-      new Pixel(size, 1),
-      new Pixel(size, 2)
-    );
+    this.competitor1 = competitor1;
+    this.competitor2 = competitor2;
+    // new Pixel(
+    //   size,
+    //   2,
+    //   new Pixel(size, 1),
+    //   new Pixel(size, 2)
+    // );
 
     this.size = size;
     this.step = 500 / size;
     //Normally the step would be 500 / size but I decreased to look better with a smaller size
     this.arena = this.createArena(size, this.competitor1, this.competitor2);
     this.oldArena = this.arena;
-    console.log(this.arena);
     this.interval = setInterval(() => {
       this.run();
     }, 2);
@@ -316,23 +328,83 @@ function draw(arena, competitor1, competitor2, step, size) {
   }
 }
 
-let simulation = new Simulate(125, true);
-function StartSimulation(rounds) {
+// let simulation = new Simulate(125, true);
+let participants = [];
+let size = 125;
+let rounds = 4;
+// let createdPixel = new Pixel(size, 99);
+// createdPixel.addPixelValues(10, 10, 10, 10, 10, 10);
+// StartSimulation(rounds, createdPixel, createdPixel);
+StartSimulation(rounds);
+
+function playMatches(rounds, curRound = 0, numberOfParticipants) {
+  //evaluateMatches
+  if (participants.length < 3) {
+    MultiplyAndRepeat(rounds, participants);
+    return;
+  }
+  if (curRound != 0) {
+    let newParticipants = [];
+    for (let i = 0; i < participants.length; i += 2) {
+      if (participants[i].totalPixels > participants[i + 1].totalPixels) {
+        newParticipants.push(participants[i]);
+      } else {
+        newParticipants.push(participants[i + 1]);
+      }
+    }
+    participants = newParticipants;
+    //EVALUATE
+  }
+  let simulations = [];
+  for (let i = 0; i < participants.length; i += 2) {
+    let show = i == 0 ? true : false;
+    participants[i].resetPixels();
+    participants[i + 1].resetPixels();
+    simulations.push(
+      new Simulate(size, show, participants[i], participants[i + 1])
+    );
+  }
+  //Start new Matches
+
+  let interval = setTimeout(() => {
+    curRound++;
+    playMatches(rounds, curRound, numberOfParticipants);
+    for (let i = 0; i < simulations.length; i++) {
+      const simulation = simulations[i];
+      simulation.clearInterval();
+    }
+  }, 2000);
+}
+let generation = 0;
+function MultiplyAndRepeat(rounds, participants) {
+  StartSimulation(rounds, participants[0], participants[1]);
+  generation++;
+  document.getElementById(
+    "previousParent1"
+  ).innerHTML = `Color: ${participants[0].color} || Force: ${participants[0].force}
+  Defense Advantage: ${participants[0].defenseAdvantage} || Attack Advantage: ${participants[0].attackAdvantage}
+  Gang Advantage: ${participants[0].gangAdvantage} || Solo Advantage : ${participants[0].soloAdvantage} || PIXELS: ${participants[0].totalPixels}
+  || Lifes: ${participants[0].numberOfExtraLifes}`;
+  document.getElementById("previousParent1").style.color =
+    participants[0].color;
+  document.getElementById(
+    "previousParent2"
+  ).innerHTML = `Color: ${participants[1].color} || Force: ${participants[1].force}
+  Defense Advantage: ${participants[1].defenseAdvantage} || Attack Advantage: ${participants[1].attackAdvantage}
+  Gang Advantage: ${participants[1].gangAdvantage} || Solo Advantage : ${participants[1].soloAdvantage} || PIXELS: ${participants[1].totalPixels}
+  || Lifes: ${participants[1].numberOfExtraLifes}`;
+  document.getElementById("previousParent2").style.color =
+    participants[1].color;
+}
+
+function StartSimulation(rounds, parent1 = [], parent2 = []) {
+  participants = [];
   let numberOfParticipants = Math.pow(2, rounds);
+  for (let i = 0; i < numberOfParticipants; i++) {
+    let participant = new Pixel(size, i, parent1, parent2);
+    participants.push(participant);
+  }
+  playMatches(rounds, 0, numberOfParticipants);
+
   //create all pixels  needed for the tournment
 }
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);
-// new Simulate(125);

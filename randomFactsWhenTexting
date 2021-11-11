@@ -4,3 +4,36 @@ But when there was a difference of 1, it would be a stalemate
 Ideas:
 A timed bonus for the one who is losing
 Eg: when team a is losing with only 1/8 of its territory, it'll have a boost of 5 for 10 seconds after that nothing
+
+First Actual Simulation on Version 0.0.01:
+SIZE = 125
+ROUNDS = 4;
+
+WHERE
+let attackScore =
+attackForce +
+attackGangBonus +
+attackTeam.surprise +
+attackBonus +
+lowNumbersBonusAttack +
+attackers -
+defenders;
+AND
+RandomValue < 2/10
+After 8 generations,
+Color: #a6f7fd || Force: 3 Defense Advantage: 8 || Attack Advantage: 3 Gang Advantage: 9 || Solo Advantage : -1 || PIXELS: 7175 || Lifes: 50
+Color: #d9ec2b || Force: 1 Defense Advantage: 6 || Attack Advantage: 3 Gang Advantage: 9 || Solo Advantage : -3 || PIXELS: 8449 || Lifes: 50
+
+in low force scenarios, the defense and gang would be very important
+
+After 8 generations,
+Color: #353c37 || Force: 6 Defense Advantage: 9 || Attack Advantage: 9 Gang Advantage: -4 || Solo Advantage : -5 || PIXELS: 7635 || Lifes: 50
+Color: #ee8f3d || Force: 6 Defense Advantage: 9 || Attack Advantage: 9 Gang Advantage: -4 || Solo Advantage : -7 || PIXELS: 7989 || Lifes: 50
+
+defense and attack were high but gang and solo were low
+
+After 10 generations,
+Color: #0f080c || Force: 18 Defense Advantage: 10 || Attack Advantage: 11 Gang Advantage: -6 || Solo Advantage : 11 || PIXELS: 7780 || Lifes: 50
+Color: #fc2b50 || Force: 18 Defense Advantage: 10 || Attack Advantage: 11 Gang Advantage: -6 || Solo Advantage : 11 || PIXELS: 7844 || Lifes: 50
+
+Needs to add a limit like Dnd
